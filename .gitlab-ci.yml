@@ -15,7 +15,7 @@ build:
   stage: build
   image: python:3.6
   before_script:
-   - pip3 install --upgrade virtualenv
+   - python pip3 install --upgrade virtualenv
   script:
    - virtualenv env                       # Create a virtual environment for the python application
    - source env/bin/activate              # Activate the virtual environment
