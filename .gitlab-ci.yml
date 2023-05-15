@@ -15,9 +15,8 @@ build:
   stage: build
   image: python:3.6
   before_script:
-   - python -m pip install requests
-
-script:
+   - pip3 install --upgrade virtualenv
+  script:
    - virtualenv env                       # Create a virtual environment for the python application
    - source env/bin/activate              # Activate the virtual environment
    - pip install -r requirements.txt      # Install the required third party packages as defined in requirements.txt
@@ -33,14 +32,6 @@ test:
    - source env/bin/activate
    - pip install -r requirements.txt
    - python manage.py test taskManager
-
-release:
-  stage: release
-  before_script:
-   - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  script:
-   - docker build -t $CI_REGISTRY_IMAGE .  # Build the application into Docker image
-   - docker push $CI_REGISTRY_IMAGE        # Push the image into registry
 
 integration:
   stage: integration
