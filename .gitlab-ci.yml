@@ -8,11 +8,15 @@ build:       # this is job named build, it can be anything, job1, job2, etc.,
   stage: build    # this job belongs to the build stage. Here both job name and stage name is the same i.e., build
   script:
     - echo "This is a build step"  # We are running an echo command, but it can be any command.
+    - echo "{\"vulnerability\":\"SQL Injection\"}" > vulnerabilities.json
+  artifacts:      # notice a new tag artifacts
+    paths: [vulnerabilities.json]   # this is the path to the output.json file
 
 test:
   stage: test
   script:
-     - execute_script_that_will_fail
+    - echo "This is a test step."
+    - exit 1         # Non zero exit code, fails a job.
   allow_failure: true   #<--- allow the build to fail but don't mark it as such
 
 integration:        # integration job under stage integration.
