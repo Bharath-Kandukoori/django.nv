@@ -1,10 +1,5 @@
 pipeline {
     agent any
-
-    options {
-        gitLabConnection('gitlab')
-    }
-
     stages {
         stage("build") {
             agent { 
