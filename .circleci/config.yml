@@ -1,4 +1,4 @@
- jobs:
+jobs:
   build:
     docker:
       - image: python:3.6                   # similar to "image" in GitLab
@@ -45,10 +45,10 @@ workflows:
       - test:
           requires:
             - build 
-      - zap_baseline:
+      -  zap_baseline:
           requires:
             - test
       - prod:
           type: approval
           requires:
-            - zap_baseline
+            -  zap_baseline
