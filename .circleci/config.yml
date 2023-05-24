@@ -1,4 +1,4 @@
-jobs:
+ jobs:
   build:
     docker:
       - image: python:3.6                   # similar to "image" in GitLab
@@ -17,41 +17,18 @@ jobs:
           pip install -r requirements.txt
           python manage.py test taskManager
 
-  oast-frontend:
+  zap_baseline:
     machine: true
     steps:
       - checkout
 
-      - run: 
-          command: docker run --rm -v $(pwd):/src hysnsec/bandit -r /src -f json -o /src/bandit-output.json || true
+      - run: |
+          docker pull owasp/zap2docker-stable:2.10.0
+          docker run --user root --rm -v $(pwd):/zap/wrk:rw -w /zap owasp/zap2docker-stable:2.10.0 zap-baseline.py -t ${zap} -J zap-output.json || true
 
       - store_artifacts:
-          path: retirejs-output.json
-          destination: retirejs-artifact
-          when: always
-
-  sast:
-    machine: true
-    steps:
-      - checkout
-
-      - run: docker run --rm -v $(pwd):/src hysnsec/bandit -r /src -f json -o /src/bandit-output.json || true
-
-      - store_artifacts:
-          path: bandit-output.json
-          destination: bandit-artifact
-          when: always
-
-  integration:
-    docker:
-      - image: python:3.6
-    steps:
-      - checkout
-      - run:
-          command: |
-            echo "This is an integration step"
-            exit 1
-          when: on_fail           # Even if the job fails, continue to the next stages
+          path: zap-output.json
+          destination: zap-artifact
 
   prod:
     docker:
@@ -67,17 +44,11 @@ workflows:
       - build
       - test:
           requires:
-            - build
-      - oast-frontend:
+            - build 
+      - zap_baseline:
           requires:
             - test
-      - sast:
-          requires:
-            - oast-frontend
-      - integration:
-          requires:
-            - sast
       - prod:
           type: approval
           requires:
-            - integration
+            - zap_baseline
