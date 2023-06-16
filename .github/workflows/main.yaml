@@ -1,3 +1,4 @@
+cat >.github/workflows/main.yaml<<EOF
 name: Django                                  # workflow name
 
 on:
@@ -7,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04                    # similar to "image" in GitLab
+    runs-on: ubuntu-20.04                   # similar to "image" in GitLab
     steps:
       - uses: actions/checkout@v2
 
@@ -41,21 +42,17 @@ jobs:
           pip install -r requirements.txt
           python manage.py test taskManager
 
-  nuclei-scan:
+  integration:
     runs-on: ubuntu-20.04
     needs: test
     steps:
-      - run: |
-           docker run --user $(id -u):$(id -g) -w /nuclei -v $(pwd):/nuclei:rw --rm projectdiscovery/nuclei:v2.9.1 -u https://www.celestialsys.com -j -o nuclei-output.json
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: nuclei scan
-          path: nuclei-output.json
-        if: always()        # what is this for?
+      - run: echo "This is an integration step"
+      - run: exit 1
+        continue-on-error: true
 
   prod:
     runs-on: ubuntu-20.04
-    needs: nuclei-scan
+    needs: integration
     steps:
       - run: echo "This is a deploy step."
+EOF
