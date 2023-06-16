@@ -17,17 +17,37 @@ jobs:
           pip install -r requirements.txt
           python manage.py test taskManager
 
-  nuclei:
-    machine: true
+  semgrep:
+    docker:
+      - image: returntocorp/semgrep-agent:v1
+    environment:
+      SEMGREP_RULES: >- # more at semgrep.dev/explore
+        p/security-audit
+        p/secrets
+        p/django
+
     steps:
       - checkout
 
-      - run: |
-          docker run --user $(id -u):$(id -g) -w /nuclei -v $(pwd):/nuclei:rw --rm projectdiscovery/nuclei:v2.9.1 -u https://www.celestialsys.com -j -o nuclei-output.json
+      - run:
+          name: "Semgrep scan"
+          command: semgrep-agent --gitlab-json > semgrep-output.json || true
 
       - store_artifacts:
-          path: nuclei-output.json
-          destination: nuclei-artifact
+          path: semgrep-output.json
+          destination: semgrep-artifact
+          when: always
+
+  integration:
+    docker:
+      - image: python:3.6
+    steps:
+      - checkout
+      - run:
+          command: |
+            echo "This is an integration step"
+            exit 1
+          when: on_fail                    # Even if the job fails, continue to the next stages
 
   prod:
     docker:
@@ -43,11 +63,14 @@ workflows:
       - build
       - test:
           requires:
-            - build 
-      - nuclei:
+            - build
+      - semgrep:
           requires:
             - test
+      - integration:
+          requires:
+            - sast
       - prod:
           type: approval
           requires:
-            - nuclei
+            - integration
